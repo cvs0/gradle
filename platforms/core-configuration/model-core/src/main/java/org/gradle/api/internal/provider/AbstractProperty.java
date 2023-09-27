@@ -125,6 +125,10 @@ public abstract class AbstractProperty<T, S extends ValueSupplier> extends Abstr
         return value;
     }
 
+    protected S getConventionSupplier() {
+        return state.convention();
+    }
+
     protected Value<? extends T> calculateOwnValueNoProducer(ValueConsumer consumer) {
         beforeRead(null, consumer);
         return doCalculateValue(consumer);
@@ -318,7 +322,18 @@ public abstract class AbstractProperty<T, S extends ValueSupplier> extends Abstr
 
         public abstract FinalizationState<S> finalState();
 
+        /**
+         * Sets a value to be used as an implicit value, but does not
+         * change this state into an implicit value state.
+         *
+         * @param convention
+         */
         abstract void setConvention(S convention);
+
+        /**
+         * Returns the current convention value, regardless the state.
+         */
+        abstract S convention();
 
         public abstract void disallowChanges();
 
@@ -327,7 +342,7 @@ public abstract class AbstractProperty<T, S extends ValueSupplier> extends Abstr
         public abstract void disallowUnsafeRead();
 
         /**
-         * Assigns a new explicit value.
+         * Assigns a new explicit value, and changes this state into an explicit value state.
          *
          * @param value the new explicit value
          * @return the new explicit value
@@ -352,6 +367,10 @@ public abstract class AbstractProperty<T, S extends ValueSupplier> extends Abstr
          */
         public abstract S applyConvention(S value, S convention);
 
+        /**
+         * Changes into an implicit value state, returning
+         * the xzimplicit value if a convention is applied, or null.
+         */
         public abstract S implicitValue();
 
         public abstract boolean maybeFinalizeOnRead(DisplayName displayName, @Nullable ModelObject producer, ValueConsumer consumer);
@@ -467,6 +486,11 @@ public abstract class AbstractProperty<T, S extends ValueSupplier> extends Abstr
             this.convention = convention;
         }
 
+        @Override
+        S convention() {
+            return convention;
+        }
+
         private String cannotFinalizeValueOf(DisplayName displayName, String reason) {
             return cannot("finalize", displayName, reason);
         }
@@ -553,6 +577,11 @@ public abstract class AbstractProperty<T, S extends ValueSupplier> extends Abstr
         @Override
         void setConvention(S convention) {
             throw unexpected();
+        }
+
+        @Override
+        S convention() {
+            return null;
         }
 
         private UnsupportedOperationException unexpected() {
