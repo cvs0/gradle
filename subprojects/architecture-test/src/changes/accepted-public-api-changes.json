@@ -1,6 +1,22 @@
 {
     "acceptedApiChanges": [
         {
+            "type": "org.gradle.api.provider.HasMultipleValues",
+            "member": "Class org.gradle.api.provider.HasMultipleValues",
+            "acceptation": "YOLO",
+            "changes": [
+                "org.gradle.api.provider.CollectionPropertyConfigurer"
+            ]
+        },
+        {
+            "type": "org.gradle.api.provider.MapProperty",
+            "member": "Class org.gradle.api.provider.MapProperty",
+            "acceptation": "YOLO",
+            "changes": [
+                "org.gradle.api.provider.MapConfigurer"
+            ]
+        },        
+        {
             "type": "org.gradle.kotlin.dsl.BuiltinPluginIdExtensionsKt",
             "member": "Class org.gradle.kotlin.dsl.BuiltinPluginIdExtensionsKt",
             "acceptation": "Adding generated Kotlin DSL extensions for Gradle API to the binary compatibility check",
@@ -2274,19 +2290,6 @@
             "acceptation": "Adding generated Kotlin DSL extensions for Gradle API to the binary compatibility check",
             "changes": [
                 "Method added to public class"
-            "type": "org.gradle.api.provider.HasMultipleValues",
-            "member": "Class org.gradle.api.provider.HasMultipleValues",
-            "acceptation": "YOLO",
-            "changes": [
-                "org.gradle.api.provider.CollectionPropertyConfigurer"
-            ]
-        },
-        {
-            "type": "org.gradle.api.provider.MapProperty",
-            "member": "Class org.gradle.api.provider.MapProperty",
-            "acceptation": "YOLO",
-            "changes": [
-                "org.gradle.api.provider.MapConfigurer"
             ]
         }
     ]
