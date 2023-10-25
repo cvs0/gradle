@@ -63,13 +63,9 @@ public interface FileLockManager {
 
     enum LockMode {
         /**
-         * Support processes asking for access for exclusive lock mode.
+         * Support processes asking for access.
          */
-        OnDemandExclusive,
-        /**
-         * Support processes asking for access for shared lock mode.
-         */
-        OnDemandShared,
+        OnDemand,
         /**
          * Multiple readers, no writers.
          */
@@ -84,7 +80,7 @@ public interface FileLockManager {
         None;
 
         public boolean isOnDemand() {
-            return this == OnDemandExclusive || this == OnDemandShared;
+            return this == OnDemand;
         }
     }
 }
