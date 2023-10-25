@@ -16,7 +16,6 @@
 
 package org.gradle.cache.internal;
 
-import com.google.common.base.Preconditions;
 import org.gradle.api.Action;
 import org.gradle.cache.FileLock;
 import org.gradle.cache.FileLockManager;
@@ -31,7 +30,6 @@ import java.util.concurrent.locks.Lock;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gradle.cache.FileLockManager.LockMode.Exclusive;
-import static org.gradle.cache.FileLockManager.LockMode.Shared;
 
 public class LockOnDemandCrossProcessCacheAccess extends AbstractCrossProcessCacheAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(LockOnDemandCrossProcessCacheAccess.class);
