@@ -19,9 +19,9 @@ package org.gradle.api.problems.internal;
 import org.gradle.api.problems.Problem;
 import org.gradle.api.problems.ProblemBuilder;
 import org.gradle.api.problems.ProblemBuilderSpec;
+import org.gradle.api.problems.ProblemEmitter;
 import org.gradle.api.problems.ProblemTransformer;
 import org.gradle.api.problems.ReportableProblem;
-import org.gradle.internal.operations.BuildOperationProgressEventEmitter;
 import org.gradle.internal.service.scopes.Scopes;
 import org.gradle.internal.service.scopes.ServiceScope;
 
@@ -30,19 +30,24 @@ import java.util.List;
 
 @ServiceScope(Scopes.BuildTree.class)
 public class DefaultProblems implements InternalProblems {
-    private final BuildOperationProgressEventEmitter buildOperationProgressEventEmitter;
+
+    private ProblemEmitter emitter;
     private final List<ProblemTransformer> transformers;
 
-    public DefaultProblems(BuildOperationProgressEventEmitter buildOperationProgressEventEmitter) {
-        this(buildOperationProgressEventEmitter, Collections.<ProblemTransformer>emptyList());
+    public DefaultProblems( ProblemEmitter emitter) {
+        this(emitter, Collections.emptyList());
     }
 
     public DefaultProblems(
-        BuildOperationProgressEventEmitter buildOperationProgressEventEmitter,
+        ProblemEmitter emitter,
         List<ProblemTransformer> transformers
     ) {
-        this.buildOperationProgressEventEmitter = buildOperationProgressEventEmitter;
+        this.emitter = emitter;
         this.transformers = transformers;
+    }
+
+    public void setEmitter(ProblemEmitter emitter) {
+        this.emitter = emitter;
     }
 
     @Override
@@ -84,6 +89,6 @@ public class DefaultProblems implements InternalProblems {
             problem = transformer.transform(problem);
         }
 
-        buildOperationProgressEventEmitter.emitNowIfCurrent(new DefaultProblemProgressDetails(problem));
+        emitter.emit(problem);
     }
 }
