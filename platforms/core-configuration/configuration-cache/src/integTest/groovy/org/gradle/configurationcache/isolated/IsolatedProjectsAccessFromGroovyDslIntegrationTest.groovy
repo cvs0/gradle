@@ -739,7 +739,7 @@ class IsolatedProjectsAccessFromGroovyDslIntegrationTest extends AbstractIsolate
         }
     }
 
-    def "fails on access #type of unconfigured project"() {
+    def "fails on invoke method of unconfigured project"() {
         given:
         settingsFile << """
             include(':a')
@@ -748,32 +748,64 @@ class IsolatedProjectsAccessFromGroovyDslIntegrationTest extends AbstractIsolate
 
         file("a/build.gradle") << """
             def unconfiguredProject = project(':b')
-            $referrerConfiguration
+            println 'Unconfigured project value = ' + unconfiguredProject.foo()
+        """
+
+        file("b/build.gradle") << """
+            String foo(){ 'configured' }
+        """
+
+        when:
+        isolatedProjectsRun 'help', WARN_PROBLEMS_CLI_OPT
+
+        then:
+        outputContains("Unconfigured project value = null")
+        outputDoesNotContain("Unconfigured project value = configured")
+        fixture.assertStateStoredWithProblems {
+            projectsConfigured(':', ':a', ':b')
+            problem("Build file 'a/build.gradle': line 3: 'Project.evaluationDependsOn' must be used to establish a dependency between project ':b' and project ':a' evaluation")
+            problem("Build file 'a/build.gradle': line 3: Cannot access project ':b' from project ':a'")
+            problem("Build file 'a/build.gradle': line 3: Project ':b' cannot dynamically look up a method in the parent project ':'")
+        }
+
+    }
+
+    def "fails on access property of unconfigured project"() {
+        given:
+        settingsFile << """
+            include(':a')
+            include(':b')
+        """
+
+        file("a/build.gradle") << """
+            def unconfiguredProject = project(':b')
+            def unconfiguredProjectExtension = unconfiguredProject.myExtension
+            def value = unconfiguredProjectExtension != null ? unconfiguredProjectExtension.foo.get() : null
+            println 'Unconfigured project value = ' + value
         """
 
         file("b/build.gradle") << """
             import ${Property.name}
 
             interface MyExtension {
-                Property<String> bar()
+                Property<String> getFoo()
             }
 
-            $referentConfiguration
+            def myExtension= extensions.create('myExtension', MyExtension)
+            myExtension.foo.set('configured')
         """
 
         when:
-        isolatedProjectsFails 'help', WARN_PROBLEMS_CLI_OPT
+        isolatedProjectsRun 'help', WARN_PROBLEMS_CLI_OPT
 
         then:
-        failure.assertHasErrorOutput(expectedOutput)
-        problems.assertResultHasProblems(failure) {
-            withProblem("Build file '${relativePath('a/build.gradle')}': line 3: Cannot access project ':b' from project ':a'")
-            withProblem("Build file '${relativePath('a/build.gradle')}': line 3: Project ':b' cannot dynamically look up a $type in the parent project ':'")
+        outputContains("Unconfigured project value = null")
+        outputDoesNotContain("Unconfigured project value = configured")
+        fixture.assertStateStoredWithProblems {
+            projectsConfigured(':', ':a', ':b')
+            problem("Build file 'a/build.gradle': line 3: 'Project.evaluationDependsOn' must be used to establish a dependency between project ':b' and project ':a' evaluation")
+            problem("Build file 'a/build.gradle': line 3: Cannot access project ':b' from project ':a'")
+            problem("Build file 'a/build.gradle': line 3: Project ':b' cannot dynamically look up a property in the parent project ':'")
         }
-
-        where:
-        type       | referentConfiguration                           | referrerConfiguration                   | expectedOutput
-        "property" | "extensions.create('myExtension', MyExtension)" | "unconfiguredProject.myExtension.bar()" | "Could not get unknown property 'myExtension' for project ':b' of type org.gradle.api.Project."
-        "method"   | "def foo(){}"                                   | "unconfiguredProject.foo()"             | "Could not find method foo() for arguments [] on project ':b' of type org.gradle.api.Project."
     }
 }
