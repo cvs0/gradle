@@ -36,6 +36,7 @@ import org.gradle.internal.properties.PropertyValue;
 import org.gradle.internal.properties.PropertyVisitor;
 import org.gradle.internal.properties.annotations.PropertyMetadata;
 import org.gradle.internal.reflect.validation.TypeValidationContext;
+import org.gradle.util.internal.TextUtil;
 import org.gradle.work.Incremental;
 import org.gradle.work.NormalizeLineEndings;
 
@@ -118,7 +119,7 @@ public abstract class AbstractInputFilePropertyAnnotationHandler extends Abstrac
                     .label("is annotated with @%s but missing a normalization strategy", getAnnotationType().getSimpleName())
                     .documentedAt(userManual("validation_problems", MISSING_NORMALIZATION_ANNOTATION.toLowerCase()))
                     .noLocation()
-                    .category(DefaultProblemCategory.VALIDATION, MISSING_NORMALIZATION_ANNOTATION)
+                    .category(DefaultProblemCategory.VALIDATION, "property", TextUtil.screamingSnakeToKebabCase(MISSING_NORMALIZATION_ANNOTATION))
                     .severity(Severity.ERROR)
                     .details("If you don't declare the normalization, outputs can't be re-used between machines or locations on the same machine, therefore caching efficiency drops significantly")
                     .solution("Declare the normalization strategy by annotating the property with either @PathSensitive, @Classpath or @CompileClasspath");
