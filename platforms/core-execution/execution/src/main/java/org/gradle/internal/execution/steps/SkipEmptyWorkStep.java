@@ -56,13 +56,13 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
     private final OutputChangeListener outputChangeListener;
     private final WorkInputListeners workInputListeners;
     private final Supplier<OutputsCleaner> outputsCleanerSupplier;
-    private final Step<? super WorkspaceContext, ? extends CachingResult> delegate;
+    private final Step<? super WorkDeterminedContext, ? extends CachingResult> delegate;
 
     public SkipEmptyWorkStep(
         OutputChangeListener outputChangeListener,
         WorkInputListeners workInputListeners,
         Supplier<OutputsCleaner> outputsCleanerSupplier,
-        Step<? super WorkspaceContext, ? extends CachingResult> delegate
+        Step<? super WorkDeterminedContext, ? extends CachingResult> delegate
     ) {
         this.outputChangeListener = outputChangeListener;
         this.workInputListeners = workInputListeners;
@@ -78,12 +78,12 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
 
         ImmutableSortedMap<String, CurrentFileCollectionFingerprint> sourceFileProperties = newInputs.getFileFingerprints();
         if (hasNoSkipWhenEmptyProperties(sourceFileProperties)) {
-            return executeWithNonEmptySources(work, context);
+            return executeWithContext(work, new WorkDeterminedContext(context, work));
         } else {
             if (hasOnlyEmptySources(sourceFileProperties, newInputs.getPropertiesRequiringIsEmptyCheck(), work)) {
                 return skipExecutionWithEmptySources(work, context);
             } else {
-                return executeWithNonEmptySources(work, context.withInputFiles(newInputs.getAllFileFingerprints()));
+                return executeWithContext(work, new WorkDeterminedContext(context, newInputs.getAllFileFingerprints(), work));
             }
         }
     }
@@ -140,6 +140,8 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
 
     @Nonnull
     private CachingResult skipExecutionWithEmptySources(UnitOfWork work, WorkspaceContext context) {
+        broadcastWorkInputs(work, true);
+
         ImmutableSortedMap<String, FileSystemSnapshot> outputFilesAfterPreviousExecution = context.getPreviousExecutionState()
             .map(PreviousExecutionState::getOutputFilesProducedByWork)
             .orElse(ImmutableSortedMap.of());
@@ -160,8 +162,6 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
         }
         Duration duration = skipOutcome == ExecutionOutcome.SHORT_CIRCUITED ? Duration.ZERO : Duration.ofMillis(timer.getElapsedMillis());
 
-        broadcastWorkInputs(work, true);
-
         Try<Execution> execution = Try.successful(new Execution() {
             @Override
             public ExecutionOutcome getOutcome() {
@@ -176,7 +176,7 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
         return new CachingResult(duration, execution, null, ImmutableList.of(), null, CachingState.NOT_DETERMINED);
     }
 
-    private CachingResult executeWithNonEmptySources(UnitOfWork work, WorkspaceContext context) {
+    private CachingResult executeWithContext(UnitOfWork work, WorkDeterminedContext context) {
         broadcastWorkInputs(work, false);
         return delegate.execute(work, context);
     }

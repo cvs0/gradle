@@ -133,6 +133,8 @@ import org.gradle.internal.execution.steps.TimeoutStep;
 import org.gradle.internal.execution.steps.UpToDateResult;
 import org.gradle.internal.execution.steps.ValidateStep;
 import org.gradle.internal.execution.steps.ValidationFinishedContext;
+import org.gradle.internal.execution.steps.WorkDeterminedContext;
+import org.gradle.internal.execution.steps.WorkspaceContext;
 import org.gradle.internal.execution.timeout.TimeoutHandler;
 import org.gradle.internal.file.Deleter;
 import org.gradle.internal.file.RelativeFilePathResolver;
@@ -496,6 +498,7 @@ class DependencyManagementBuildScopeServices {
             new IdentityCacheStep<>(
             new HandleExecutionStateStep<>(
             new AssignWorkspaceStep<>(
+            new AlwaysExecuteWorkStep<>(
             new CaptureStateBeforeExecutionStep<>(buildOperationExecutor, classLoaderHierarchyHasher, outputSnapshotter, overlappingOutputDetector,
             new ValidateStep<>(virtualFileSystem, validationWarningRecorder, problems,
             new NoOpCachingStateStep<>(
@@ -507,7 +510,7 @@ class DependencyManagementBuildScopeServices {
             new TimeoutStep<>(timeoutHandler, currentBuildOperationRef,
             new RemovePreviousOutputsStep<>(deleter, outputChangeListener,
             new ExecuteStep<>(buildOperationExecutor
-        ))))))))))))))));
+        )))))))))))))))));
         // @formatter:on
     }
 
@@ -522,6 +525,19 @@ class DependencyManagementBuildScopeServices {
         public CachingResult execute(UnitOfWork work, ValidationFinishedContext context) {
             UpToDateResult result = delegate.execute(work, new CachingContext(context, CachingState.NOT_DETERMINED));
             return new CachingResult(result, CachingState.NOT_DETERMINED);
+        }
+    }
+
+    private static class AlwaysExecuteWorkStep<C extends WorkspaceContext> implements Step<C, CachingResult> {
+        private final Step<? super WorkDeterminedContext, ? extends CachingResult> delegate;
+
+        public AlwaysExecuteWorkStep(Step<? super WorkDeterminedContext, ? extends CachingResult> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public CachingResult execute(UnitOfWork work, C context) {
+            return delegate.execute(work, new WorkDeterminedContext(context, work));
         }
     }
 }
