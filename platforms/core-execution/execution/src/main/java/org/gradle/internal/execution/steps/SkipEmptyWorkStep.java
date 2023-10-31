@@ -77,10 +77,10 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
         InputFingerprinter.Result newInputs = fingerprintPrimaryInputs(work, context, knownFileFingerprints, knownValueSnapshots);
 
         ImmutableSortedMap<String, CurrentFileCollectionFingerprint> sourceFileProperties = newInputs.getFileFingerprints();
-        if (sourceFileProperties.isEmpty()) {
+        if (hasNoSkipWhenEmptyProperties(sourceFileProperties)) {
             return executeWithNonEmptySources(work, context);
         } else {
-            if (hasEmptySources(sourceFileProperties, newInputs.getPropertiesRequiringIsEmptyCheck(), work)) {
+            if (hasOnlyEmptySources(sourceFileProperties, newInputs.getPropertiesRequiringIsEmptyCheck(), work)) {
                 return skipExecutionWithEmptySources(work, context);
             } else {
                 return executeWithNonEmptySources(work, context.withInputFiles(newInputs.getAllFileFingerprints()));
@@ -88,7 +88,11 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
         }
     }
 
-    private boolean hasEmptySources(ImmutableSortedMap<String, CurrentFileCollectionFingerprint> sourceFileProperties, ImmutableSet<String> propertiesRequiringIsEmptyCheck, UnitOfWork work) {
+    private static boolean hasNoSkipWhenEmptyProperties(ImmutableSortedMap<String, CurrentFileCollectionFingerprint> sourceFileProperties) {
+        return sourceFileProperties.isEmpty();
+    }
+
+    private static boolean hasOnlyEmptySources(ImmutableSortedMap<String, CurrentFileCollectionFingerprint> sourceFileProperties, ImmutableSet<String> propertiesRequiringIsEmptyCheck, UnitOfWork work) {
         if (propertiesRequiringIsEmptyCheck.isEmpty()) {
             return sourceFileProperties.values().stream()
                 .allMatch(CurrentFileCollectionFingerprint::isEmpty);
@@ -96,25 +100,25 @@ public class SkipEmptyWorkStep implements Step<WorkspaceContext, CachingResult> 
             // We need to check the underlying file collections for properties in propertiesRequiringIsEmptyCheck,
             // since those are backed by files which may be empty archives.
             // And being empty archives is not reflected in the fingerprint.
-            return hasEmptyFingerprints(sourceFileProperties, propertyName -> !propertiesRequiringIsEmptyCheck.contains(propertyName))
-                && hasEmptyInputFileCollections(work, propertiesRequiringIsEmptyCheck::contains);
+            return hasOnlyEmptyFingerprints(sourceFileProperties, propertyName -> !propertiesRequiringIsEmptyCheck.contains(propertyName))
+                && hasOnlyEmptyInputFileCollections(work, propertiesRequiringIsEmptyCheck::contains);
         }
     }
 
-    private boolean hasEmptyFingerprints(ImmutableSortedMap<String, CurrentFileCollectionFingerprint> sourceFileProperties, Predicate<String> propertyNameFilter) {
+    private static boolean hasOnlyEmptyFingerprints(ImmutableSortedMap<String, CurrentFileCollectionFingerprint> sourceFileProperties, Predicate<String> propertyNameFilter) {
         return sourceFileProperties.entrySet().stream()
             .filter(entry -> propertyNameFilter.test(entry.getKey()))
             .map(Map.Entry::getValue)
             .allMatch(CurrentFileCollectionFingerprint::isEmpty);
     }
 
-    private boolean hasEmptyInputFileCollections(UnitOfWork work, Predicate<String> propertyNameFilter) {
+    private static boolean hasOnlyEmptyInputFileCollections(UnitOfWork work, Predicate<String> propertyNameFilter) {
         EmptyCheckingVisitor visitor = new EmptyCheckingVisitor(propertyNameFilter);
         work.visitRegularInputs(visitor);
         return visitor.isAllEmpty();
     }
 
-    private InputFingerprinter.Result fingerprintPrimaryInputs(UnitOfWork work, WorkspaceContext context, ImmutableSortedMap<String, CurrentFileCollectionFingerprint> knownFileFingerprints, ImmutableSortedMap<String, ValueSnapshot> knownValueSnapshots) {
+    private static InputFingerprinter.Result fingerprintPrimaryInputs(UnitOfWork work, WorkspaceContext context, ImmutableSortedMap<String, CurrentFileCollectionFingerprint> knownFileFingerprints, ImmutableSortedMap<String, ValueSnapshot> knownValueSnapshots) {
         return work.getInputFingerprinter().fingerprintInputProperties(
             context.getPreviousExecutionState()
                 .map(PreviousExecutionState::getInputProperties)

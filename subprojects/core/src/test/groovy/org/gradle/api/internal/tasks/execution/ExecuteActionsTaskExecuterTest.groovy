@@ -60,9 +60,9 @@ import org.gradle.internal.execution.steps.CancelExecutionStep
 import org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep
 import org.gradle.internal.execution.steps.CaptureStateBeforeExecutionStep
 import org.gradle.internal.execution.steps.ExecuteStep
+import org.gradle.internal.execution.steps.HandleExecutionStateStep
 import org.gradle.internal.execution.steps.IdentifyStep
 import org.gradle.internal.execution.steps.IdentityCacheStep
-import org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep
 import org.gradle.internal.execution.steps.RemovePreviousOutputsStep
 import org.gradle.internal.execution.steps.ResolveCachingStateStep
 import org.gradle.internal.execution.steps.ResolveChangesStep
@@ -172,7 +172,7 @@ class ExecuteActionsTaskExecuterTest extends Specification {
     def executionEngine = new DefaultExecutionEngine(Stub(Problems),
         new IdentifyStep<>(buildOperationExecutor,
         new IdentityCacheStep<>(
-        new LoadPreviousExecutionStateStep<>(
+        new HandleExecutionStateStep<>(
         new AssignWorkspaceStep<>(
         new SkipEmptyWorkStep(outputChangeListener, inputListeners, outputsCleanerFactory,
         new CaptureStateBeforeExecutionStep<>(buildOperationExecutor, classloaderHierarchyHasher, outputSnapshotter, overlappingOutputDetector,
