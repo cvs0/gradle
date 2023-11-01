@@ -16,8 +16,8 @@
 
 package org.gradle.language.cpp
 
-import org.gradle.integtests.fixtures.ToBeFixedForConfigurationCache
 import org.gradle.integtests.fixtures.SourceFile
+import org.gradle.integtests.fixtures.ToBeFixedForConfigurationCache
 import org.gradle.nativeplatform.fixtures.AbstractInstalledToolChainIntegrationSpec
 import org.gradle.nativeplatform.fixtures.app.IncrementalCppStaleCompileOutputApp
 import org.gradle.nativeplatform.fixtures.app.IncrementalCppStaleCompileOutputLib
@@ -116,7 +116,7 @@ class CppIncrementalBuildStaleOutputsIntegrationTest extends AbstractInstalledTo
         when:
         app.library.applyChangesToProject(file('greeter'))
         app.executable.applyChangesToProject(file('app'))
-        succeeds "assemble"
+        succeeds "assemble", "--info"
 
         then:
         def skippedTasks = tasks(":greeter").debug.allToLink + [":greeter:assemble", ":assemble"]
