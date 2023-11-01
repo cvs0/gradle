@@ -46,13 +46,14 @@ import org.gradle.internal.execution.steps.BuildCacheStep;
 import org.gradle.internal.execution.steps.CancelExecutionStep;
 import org.gradle.internal.execution.steps.CaptureStateAfterExecutionStep;
 import org.gradle.internal.execution.steps.CaptureStateBeforeExecutionStep;
-import org.gradle.internal.execution.steps.CreateOutputsStep;
+import org.gradle.internal.execution.steps.ChangeOutputsStep;
 import org.gradle.internal.execution.steps.ExecuteStep;
 import org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep;
 import org.gradle.internal.execution.steps.HandleExecutionStateStep;
 import org.gradle.internal.execution.steps.HandleStaleOutputsStep;
 import org.gradle.internal.execution.steps.IdentifyStep;
 import org.gradle.internal.execution.steps.IdentityCacheStep;
+import org.gradle.internal.execution.steps.PreCreateOutputParentsStep;
 import org.gradle.internal.execution.steps.RemovePreviousOutputsStep;
 import org.gradle.internal.execution.steps.ResolveCachingStateStep;
 import org.gradle.internal.execution.steps.ResolveChangesStep;
@@ -150,13 +151,14 @@ public class ExecutionGradleServices {
             new SkipUpToDateStep<>(
             new BuildCacheStep(buildCacheController, deleter, outputChangeListener,
             new ResolveInputChangesStep<>(
-            new CaptureStateAfterExecutionStep<>(buildOperationExecutor, buildInvocationScopeId.getId(), outputSnapshotter, outputChangeListener,
-            new CreateOutputsStep<>(
+            new CaptureStateAfterExecutionStep<>(buildOperationExecutor, buildInvocationScopeId.getId(), outputSnapshotter,
+            new ChangeOutputsStep<>(outputChangeListener,
+            new PreCreateOutputParentsStep<>(
             new TimeoutStep<>(timeoutHandler, currentBuildOperationRef,
             new CancelExecutionStep<>(cancellationToken,
             new RemovePreviousOutputsStep<>(deleter, outputChangeListener,
             new ExecuteStep<>(buildOperationExecutor
-        )))))))))))))))))))))));
+        ))))))))))))))))))))))));
         // @formatter:on
     }
 }
