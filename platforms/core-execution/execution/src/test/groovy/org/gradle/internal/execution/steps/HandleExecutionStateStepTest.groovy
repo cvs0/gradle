@@ -33,7 +33,7 @@ import org.gradle.internal.snapshot.impl.ImplementationSnapshot
 
 import javax.annotation.Nullable
 
-class HandleExecutionStateStepTest extends StepSpec<WorkspaceContext> implements SnapshotterFixture {
+class HandleExecutionStateStepTest extends StepSpec<MutableWorkspaceContext> implements SnapshotterFixture {
     def executionHistoryStore = Mock(ExecutionHistoryStore)
 
     def step = new HandleExecutionStateStep(delegate)
