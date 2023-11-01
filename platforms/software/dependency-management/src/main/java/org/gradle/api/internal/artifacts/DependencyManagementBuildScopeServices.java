@@ -125,6 +125,7 @@ import org.gradle.internal.execution.steps.HandleExecutionStateStep;
 import org.gradle.internal.execution.steps.IdentifyStep;
 import org.gradle.internal.execution.steps.IdentityCacheStep;
 import org.gradle.internal.execution.steps.MutableWorkspaceContext;
+import org.gradle.internal.execution.steps.MutateWorkspaceStep;
 import org.gradle.internal.execution.steps.PreCreateOutputParentsStep;
 import org.gradle.internal.execution.steps.RemovePreviousOutputsStep;
 import org.gradle.internal.execution.steps.ResolveChangesStep;
@@ -499,6 +500,7 @@ class DependencyManagementBuildScopeServices {
             new IdentityCacheStep<>(
             new HandleExecutionStateStep<>(
             new AssignWorkspaceStep<>(
+            new MutateWorkspaceStep<>(
             new AlwaysExecuteWorkStep<>(
             new CaptureStateBeforeExecutionStep<>(buildOperationExecutor, classLoaderHierarchyHasher, outputSnapshotter, overlappingOutputDetector,
             new ValidateStep<>(virtualFileSystem, validationWarningRecorder,
@@ -512,7 +514,7 @@ class DependencyManagementBuildScopeServices {
             new TimeoutStep<>(timeoutHandler, currentBuildOperationRef,
             new RemovePreviousOutputsStep<>(deleter, outputChangeListener,
             new ExecuteStep<>(buildOperationExecutor
-        ))))))))))))))))));
+        )))))))))))))))))));
         // @formatter:on
     }
 
